@@ -5,7 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 public class PeopleMenu extends JFrame {
     public JPanel mainPanel;
@@ -13,19 +14,19 @@ public class PeopleMenu extends JFrame {
     private JTextField namaField;
     private JTextField tahunLahirField;
     private JComboBox<String> kategoriComboBox;
-    private JTextField emailField; // Komponen JTextField/JComboBox sesuai atribut Email
+    private JTextField emailField;
     private JButton addUpdateButton;
     private JButton cancelButton;
     private JButton deleteButton;
     private JTable personTable;
     private JLabel titleLabel;
 
-    private ArrayList<Person> listPerson;
+    private Database database;
     private int selectedIndex = -1;
 
     public PeopleMenu() {
-        listPerson = new ArrayList<>();
-        populateList();
+        // inisialisasi objek database
+        database = new Database();
 
         if (personTable != null) {
             personTable.setModel(setTable());
@@ -35,7 +36,6 @@ public class PeopleMenu extends JFrame {
             titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD, 18f));
         }
 
-        // Pilihan Kategori untuk JComboBox
         if (kategoriComboBox != null) {
             String[] kategoriData = { "???", "Full-time", "Part-time", "Contract", "Internship" };
             kategoriComboBox.setModel(new DefaultComboBoxModel<>(kategoriData));
@@ -45,7 +45,7 @@ public class PeopleMenu extends JFrame {
             deleteButton.setVisible(false);
         }
 
-        // Listener Tombol Add / Update
+        // listener tombol simpan atau ubah data
         if (addUpdateButton != null) {
             addUpdateButton.addActionListener(new ActionListener() {
                 @Override
@@ -59,7 +59,7 @@ public class PeopleMenu extends JFrame {
             });
         }
 
-        // Listener Tombol Cancel
+        // listener tombol batal untuk mengosongkan form
         if (cancelButton != null) {
             cancelButton.addActionListener(new ActionListener() {
                 @Override
@@ -69,7 +69,7 @@ public class PeopleMenu extends JFrame {
             });
         }
 
-        // Listener Tombol Delete (Lengkap dengan Prompt Konfirmasi)
+        // listener tombol hapus data dengan konfirmasi
         if (deleteButton != null) {
             deleteButton.addActionListener(new ActionListener() {
                 @Override
@@ -91,7 +91,7 @@ public class PeopleMenu extends JFrame {
             });
         }
 
-        // Listener Klik Baris Tabel
+        // listener klik baris tabel untuk mengisi kembali form
         if (personTable != null) {
             personTable.addMouseListener(new MouseAdapter() {
                 @Override
@@ -109,6 +109,7 @@ public class PeopleMenu extends JFrame {
                     if (tahunLahirField != null) tahunLahirField.setText(curTahun);
                     if (kategoriComboBox != null) kategoriComboBox.setSelectedItem(curKategori);
                     if (emailField != null) emailField.setText(curEmail);
+
                     if (addUpdateButton != null) addUpdateButton.setText("Update");
                     if (deleteButton != null) deleteButton.setVisible(true);
                 }
@@ -116,39 +117,60 @@ public class PeopleMenu extends JFrame {
         }
     }
 
-    public void populateList() {
-        listPerson.add(new Person("EMP001", "Budi Santoso", 1992, "Full-time", "budi.santoso@company.com"));
-        listPerson.add(new Person("EMP002", "Siti Aminah", 1997, "Full-time", "siti.aminah@company.com"));
-        listPerson.add(new Person("EMP003", "Rian Pratama", 1995, "Contract", "rian.pratama@company.com"));
-    }
-
-    public DefaultTableModel setTable() {
+    // memuat data dari database mysql ke dalam tabel gui
+    public final DefaultTableModel setTable() {
         Object[] cols = { "No", "ID", "Nama", "Tahun Lahir", "Kategori", "Email" };
         DefaultTableModel tmp = new DefaultTableModel(null, cols);
 
-        for (int i = 0; i < listPerson.size(); i++) {
-            Object[] row = {
-                    i + 1,
-                    listPerson.get(i).getId(),
-                    listPerson.get(i).getNama(),
-                    listPerson.get(i).getTahunLahir(),
-                    listPerson.get(i).getKategori(),
-                    listPerson.get(i).getEmail()
-            };
-            tmp.addRow(row);
+        try {
+            ResultSet resultSet = database.selectQuery("SELECT * FROM person");
+            int i = 1;
+            while (resultSet.next()) {
+                Object[] row = new Object[6];
+                row[0] = i++;
+                row[1] = resultSet.getString("id");
+                row[2] = resultSet.getString("nama");
+                row[3] = resultSet.getInt("thn_lahir");
+                row[4] = resultSet.getString("kategori");
+                row[5] = resultSet.getString("email");
+                tmp.addRow(row);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
         return tmp;
     }
 
+    // menambahkan data baru ke dalam database
     public void insertData() {
-        try {
-            String id = idField != null ? idField.getText() : "";
-            String nama = namaField != null ? namaField.getText() : "";
-            int tahun = tahunLahirField != null ? Integer.parseInt(tahunLahirField.getText()) : 0;
-            String kategori = kategoriComboBox != null ? kategoriComboBox.getSelectedItem().toString() : "";
-            String email = emailField != null ? emailField.getText() : "";
+        String id = idField.getText().trim();
+        String nama = namaField.getText().trim();
+        String tahunStr = tahunLahirField.getText().trim();
+        String kategori = kategoriComboBox.getSelectedItem().toString();
+        String email = emailField.getText().trim();
 
-            listPerson.add(new Person(id, nama, tahun, kategori, email));
+        // validasi semua kolom input wajib diisi
+        if (id.isEmpty() || nama.isEmpty() || tahunStr.isEmpty() || email.isEmpty() || kategori.equals("???")) {
+            JOptionPane.showMessageDialog(null, "Semua kolom input harus diisi!", "Error Input", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // validasi pengecekan duplikasi id di database
+        try {
+            ResultSet checkId = database.selectQuery("SELECT * FROM person WHERE id = '" + id + "'");
+            if (checkId.next()) {
+                JOptionPane.showMessageDialog(null, "ID sudah ada! Gunakan ID yang lain.", "Error ID Duplicate", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        try {
+            int tahun = Integer.parseInt(tahunStr);
+            String sql = "INSERT INTO person VALUES ('" + id + "', '" + nama + "', " + tahun + ", '" + kategori + "', '" + email + "')";
+            database.insertUpdateDeleteQuery(sql);
+
             if (personTable != null) personTable.setModel(setTable());
             clearForm();
             JOptionPane.showMessageDialog(null, "Data berhasil ditambahkan!");
@@ -157,19 +179,25 @@ public class PeopleMenu extends JFrame {
         }
     }
 
+    // memperbarui data yang dipilih di database
     public void updateData() {
-        try {
-            String id = idField != null ? idField.getText() : "";
-            String nama = namaField != null ? namaField.getText() : "";
-            int tahun = tahunLahirField != null ? Integer.parseInt(tahunLahirField.getText()) : 0;
-            String kategori = kategoriComboBox != null ? kategoriComboBox.getSelectedItem().toString() : "";
-            String email = emailField != null ? emailField.getText() : "";
+        String id = idField.getText().trim();
+        String nama = namaField.getText().trim();
+        String tahunStr = tahunLahirField.getText().trim();
+        String kategori = kategoriComboBox.getSelectedItem().toString();
+        String email = emailField.getText().trim();
 
-            listPerson.get(selectedIndex).setId(id);
-            listPerson.get(selectedIndex).setNama(nama);
-            listPerson.get(selectedIndex).setTahunLahir(tahun);
-            listPerson.get(selectedIndex).setKategori(kategori);
-            listPerson.get(selectedIndex).setEmail(email);
+        // validasi semua kolom input wajib diisi saat update
+        if (id.isEmpty() || nama.isEmpty() || tahunStr.isEmpty() || email.isEmpty() || kategori.equals("???")) {
+            JOptionPane.showMessageDialog(null, "Semua kolom input harus diisi!", "Error Input", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        try {
+            int tahun = Integer.parseInt(tahunStr);
+            String sql = "UPDATE person SET nama = '" + nama + "', thn_lahir = " + tahun +
+                    ", kategori = '" + kategori + "', email = '" + email + "' WHERE id = '" + id + "'";
+            database.insertUpdateDeleteQuery(sql);
 
             if (personTable != null) personTable.setModel(setTable());
             clearForm();
@@ -179,13 +207,18 @@ public class PeopleMenu extends JFrame {
         }
     }
 
+    // menghapus data berdasarkan id dari database
     public void deleteData() {
-        listPerson.remove(selectedIndex);
+        String id = idField.getText();
+        String sql = "DELETE FROM person WHERE id = '" + id + "'";
+        database.insertUpdateDeleteQuery(sql);
+
         if (personTable != null) personTable.setModel(setTable());
         clearForm();
         JOptionPane.showMessageDialog(null, "Data berhasil dihapus!");
     }
 
+    // mengosongkan semua field inputan form
     public void clearForm() {
         if (idField != null) idField.setText("");
         if (namaField != null) namaField.setText("");
@@ -197,6 +230,7 @@ public class PeopleMenu extends JFrame {
         selectedIndex = -1;
     }
 
+    // menjalankan aplikasi gui
     public static void main(String[] args) {
         PeopleMenu menu = new PeopleMenu();
         menu.setSize(700, 600);

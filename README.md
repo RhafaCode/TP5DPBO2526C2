@@ -2,42 +2,67 @@
 
 ## Janji
 
-Saya Rhafa Farell Valeno dengan NIM 2508020 mengerjakan Tugas Praktikum 4 dalam mata kuliah Desain Pemrograman Berorientasi Objek. Saya tidak melakukan kecurangan yang telah dispesifikasikan. Aamiin.
+Saya Rhafa Farell Valeno dengan NIM 2508020 mengerjakan Tugas Praktikum 5 dalam mata kuliah Desain Pemrograman Berorientasi Objek. Saya tidak melakukan kecurangan yang telah dispesifikasikan. Aamiin.
 
-Aplikasi GUI berbasis Java Swing untuk mengelola data *People/Karyawan* dengan mengimplementasikan operasi **CRUD** (Create, Read, Update, Delete) serta dialog konfirmasi hapus data.
 
-## 📌 Desain & Fungsi Program
-- **Model (`Person.java`)**: Memuat atribut `ID`, `Nama`, `Tahun Lahir`, `Kategori`, serta atribut tambahan `Email`.
-- **Interface (`PeopleMenu.form`)**: Menggunakan komponen Swing seperti `JTextField`, `JComboBox`, `JButton`, dan `JTable` di dalam `JScrollPane`.
-- **Logika (`PeopleMenu.java`)**:
-    - Menyimpan data di dalam `ArrayList<Person>`.
-    - Menampilkan data pada `JTable`.
-    - Mengubah mode tombol `Add` menjadi `Update` secara otomatis saat baris tabel diklik.
-    - Menampilkan `JOptionPane` konfirmasi sebelum menghapus data.
+## Deskripsi
+Aplikasi GUI berbasis Java Swing yang terintegrasi dengan database MySQL/MariaDB menggunakan JDBC Driver. Aplikasi ini digunakan untuk mengelola data *Person* dengan fitur CRUD (Create, Read, Update, Delete) serta dilengkapi dengan validasi *error prompt*.
+
+## Fitur Utama
+1. **Read (Tampil Data):** Menampilkan seluruh data `person` dari database ke dalam tabel GUI.
+2. **Create (Tambah Data):** Menambahkan data baru ke database dengan validasi kolom kosong dan pencegahan ID duplikat.
+3. **Update (Ubah Data):** Mengubah data yang dipilih dari tabel ke database.
+4. **Delete (Hapus Data):** Menghapus data dari database dengan dialog konfirmasi (*JOptionPane*).
+5. **Clear Form:** Mengosongkan form input dan mengembalikan status tombol ke keadaan awal.
+
+## Struktur Database
+- **Database Name:** `db_people`
+- **Table Name:** `person`
+  - **Atribut Table:**
+    - `id` (VARCHAR 50, PRIMARY KEY)
+    - `nama` (VARCHAR 100)
+    - `thn_lahir` (INT)
+    - `kategori` (VARCHAR 50)
+    - `email` (VARCHAR 100)
+
+## Panduan Menjalankan Program
+1. Pastikan MariaDB atau MySQL lokal sudah aktif.
+2. Buat database `db_people` dan tabel `person` sesuai skema.
+3. Buka proyek di IntelliJ IDEA dan pastikan `lib/mysql-connector-j-26.7.0.jar` telah terdaftar pada *Project Structure -> Modules -> Dependencies*.
+4. Jalankan `PeopleMenu.java`.
+
+
+## Dokumentasi Pengujian Aplikasi
+
+### 1. Tampilan Awal & Konfigurasi Proyek
+![Tampilan Awal GUI](Dokumentasi/first_gui.png)
+![Struktur Folder Proyek](Dokumentasi/folder_dokumentasi.png)
+![Dependencies JDBC Driver](Dokumentasi/Dependencies_dokumentasi.png)
+![Struktur Database MySQL / MariaDB](Dokumentasi/database_sql_person.png)
 
 ---
 
-## Alur Kerja 
-1. **Create (Tambah Data)**: Isi seluruh bidang input (ID, Nama, Tahun Lahir, Kategori, Email) lalu klik tombol **Add**.
-2. **Read (Tampilkan Data)**: Data awal diisi otomatis via `populateList()` dan ditampilkan di tabel.
-3. **Update (Ubah Data)**: Klik salah satu baris data pada tabel. Data akan terisi ke form, lalu tombol **Add** berubah menjadi **Update** dan tombol **Delete** muncul. Ubah data lalu klik **Update**.
-4. **Delete (Hapus Data)**: Klik baris data pada tabel, lalu klik tombol **Delete**. Akan muncul pop-up konfirmasi *"Apakah Anda yakin ingin menghapus data ini?"*. Jika diklik **Yes**, data akan terhapus.
-5. **Cancel**: Membersihkan form input dan mengembalikan mode ke tombol **Add**.
+### 2. Validasi Error Prompt Input
+![Error Form Kosong - Prompt](Dokumentasi/error_validation_empty_form.png)
+![Error Form Kosong - Tampilan Form](Dokumentasi/error_validation_empty_form_2.png)
+![Error ID Duplikat - Prompt](Dokumentasi/duplicate_id.png)
+![Error ID Duplikat - Tampilan Form](Dokumentasi/duplicate_id_2.png)
 
 ---
 
-## 📷 Dokumentasi Program
+### 3. Tambah Data (Create)
+![Mengisi Form Tambah Data](Dokumentasi/add_1.png)
+![Pop-up Berhasil Tambah Data](Dokumentasi/add_2.png)
 
-### 1. Tambah Data (Create)
-![Tambah Data](Dokumentasi/add_dokumentasi_1.png)
-![Popup Tambah Data](Dokumentasi/add_dokumentasi_2.png)
+---
 
-### 2. Ubah Data (Update)
-![Ubah Data](Dokumentasi/update_dokumentasi_1.png)
-![Ubah Data](Dokumentasi/update_dokumentasi_2.png)
-![Ubah Data](Dokumentasi/update_dokumentasi_3.png)
+### 4. Ubah Data (Update)
+![Pilih Data & Edit Form](Dokumentasi/update_1.png)
+![Pop-up Berhasil Ubah Data](Dokumentasi/update_2.png)
 
-### 3. Hapus Data (Delete)
-![Popup Konfirmasi Delete](Dokumentasi/delete_dokumentasi_1.png)
-![Data Terhapus](Dokumentasi/delete_dokumentasi_2.png)
-![Data Terhapus](Dokumentasi/delete_dokumentasi_3.png)
+---
+
+### 5. Hapus Data (Delete)
+![Pilih Data untuk Dihapus](Dokumentasi/delete_1.png)
+![Pop-up Konfirmasi Hapus Data](Dokumentasi/delete_2.png)
+![Pop-up Berhasil Hapus Data](Dokumentasi/delete_3.png)
